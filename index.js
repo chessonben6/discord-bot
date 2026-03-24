@@ -12,22 +12,24 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
+  intents: [GatewayIntentBits.Guilds]
 });
 
 client.once('ready', () => {
-  console.log(`BOT ONLINE: ${client.user.tag}`);
+  console.log('BOT ONLINE');
 });
 
-client.on('messageCreate', message => {
-  if (message.author.bot) return;
-  if (message.content === '!ping') {
-    message.reply('Pong!');
-  }
+client.on('error', error => {
+  console.error('CLIENT ERROR:', error);
 });
 
-client.login(process.env.TOKEN);
+process.on('unhandledRejection', error => {
+  console.error('UNHANDLED REJECTION:', error);
+});
+
+const token = (process.env.TOKEN || '').trim();
+
+console.log('Starting login...');
+client.login(token)
+  .then(() => console.log('LOGIN RESOLVED'))
+  .catch(error => console.error('LOGIN FAILED:', error));
