@@ -1,7 +1,6 @@
 const express = require('express');
 const app = express();
-const { Client, GatewayIntentBits, Collection, Events } = require('discord.js');
-const fs = require('fs');
+const { Client, GatewayIntentBits } = require('discord.js');
 
 app.get('/', (req, res) => {
   res.send('alive');
@@ -20,52 +19,15 @@ const client = new Client({
   ]
 });
 
-client.commands = new Collection();
-
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-console.log('Command files found:', commandFiles);
-
-for (const file of commandFiles) {
-  const command = require(`./commands/${file}`);
-  client.commands.set(command.name, command);
-  console.log('Loaded command:', command.name);
-}
-
-client.once(Events.ClientReady, readyClient => {
-  console.log(`Bot is online as ${readyClient.user.tag}`);
+client.once('ready', () => {
+  console.log(`BOT ONLINE: ${client.user.tag}`);
 });
 
-client.on(Events.MessageCreate, message => {
+client.on('messageCreate', message => {
   if (message.author.bot) return;
-  if (!message.content.startsWith('!')) return;
-
-  const args = message.content.slice(1).trim().split(/ +/);
-  const commandName = args.shift()?.toLowerCase();
-
-  const command = client.commands.get(commandName);
-  if (!command) return;
-
-  try {
-    command.execute(message, args);
-  } catch (error) {
-    console.error('Command execute error:', error);
+  if (message.content === '!ping') {
+    message.reply('Pong!');
   }
 });
 
-client.on('error', error => {
-  console.error('Discord client error:', error);
-});
-
-process.on('unhandledRejection', error => {
-  console.error('Unhandled rejection:', error);
-});
-
-const token = (process.env.TOKEN || '').trim();
-
-console.log('TOKEN exists:', !!process.env.TOKEN);
-console.log('TOKEN trimmed length:', token.length);
-console.log('Starting Discord login...');
-
-client.login(token)
-  .then(() => console.log('Login promise resolved'))
-  .catch(error => console.error('Login failed:', error));
+client.login(process.env.TOKEN);
