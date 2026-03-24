@@ -22,17 +22,13 @@ const client = new Client({
 
 client.commands = new Collection();
 
-try {
-    const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
-    console.log('Command files found:', commandFiles);
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+console.log('Command files found:', commandFiles);
 
-    for (const file of commandFiles) {
-        const command = require(`./commands/${file}`);
-        client.commands.set(command.name, command);
-        console.log('Loaded command:', command.name);
-    }
-} catch (error) {
-    console.error('Command loading error:', error);
+for (const file of commandFiles) {
+    const command = require(`./commands/${file}`);
+    client.commands.set(command.name, command);
+    console.log('Loaded command:', command.name);
 }
 
 client.once('clientReady', () => {
@@ -56,6 +52,10 @@ client.on('messageCreate', message => {
     }
 });
 
+client.on('warn', info => {
+    console.log('Discord warn:', info);
+});
+
 client.on('error', error => {
     console.error('Discord client error:', error);
 });
@@ -68,14 +68,18 @@ process.on('uncaughtException', error => {
     console.error('Uncaught exception:', error);
 });
 
+const token = (process.env.TOKEN || '').trim();
+
 console.log('TOKEN exists:', !!process.env.TOKEN);
-console.log('TOKEN length:', process.env.TOKEN ? process.env.TOKEN.length : 0);
+console.log('TOKEN trimmed length:', token.length);
 console.log('Starting Discord login...');
 
-client.login(process.env.TOKEN)
-    .then(() => {
-        console.log('Login request sent successfully');
-    })
-    .catch(error => {
+(async () => {
+    try {
+        const result = await client.login(token);
+        console.log('Login call returned successfully');
+        console.log('Returned token length:', result ? result.length : 0);
+    } catch (error) {
         console.error('Login failed:', error);
-    });
+    }
+})();
